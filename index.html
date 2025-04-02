@@ -1,0 +1,969 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KingCan - Budget System</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    :root {
+      --neon-tithe: #ff00ff;
+      --neon-debt-free: #00ffff;
+      --neon-bills: #ff0000;
+      --neon-education: #00ff00;
+      --neon-savings: #ffff00;
+      --neon-fun: #ff8800;
+    }
+    
+    body {
+      background-color: #000;
+      color: #fff;
+      font-family: 'Arial', sans-serif;
+      overflow-x: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(90deg, rgba(0,0,0,1) 0%, rgba(20,20,20,1) 100%);
+      border-bottom: 1px solid #333;
+      padding: 20px 0;
+      position: relative;
+    }
+    
+    .header h1 {
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .header::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, var(--neon-tithe), var(--neon-debt-free), var(--neon-bills), var(--neon-education), var(--neon-savings), var(--neon-fun));
+      box-shadow: 0 0 10px #fff;
+    }
+    
+    .glow-text {
+      text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
+    }
+    
+    .can-container {
+      margin-bottom: 40px;
+      border-radius: 10px;
+      background-color: rgba(30, 30, 30, 0.7);
+      overflow: hidden;
+      transition: all 0.3s ease;
+      border: 1px solid #333;
+    }
+    
+    .can-container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px currentColor;
+    }
+    
+    .can-header {
+      padding: 15px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .can-body {
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+    
+    .meter-container {
+      height: 30px;
+      background-color: #222;
+      border-radius: 15px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .meter-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 15px;
+      transition: width 1s ease-in-out;
+    }
+    
+    .tithe-color { color: var(--neon-tithe); }
+    .debt-free-color { color: var(--neon-debt-free); }
+    .bills-color { color: var(--neon-bills); }
+    .education-color { color: var(--neon-education); }
+    .savings-color { color: var(--neon-savings); }
+    .fun-color { color: var(--neon-fun); }
+    
+    .tithe-bg { background-color: var(--neon-tithe); }
+    .debt-free-bg { background-color: var(--neon-debt-free); }
+    .bills-bg { background-color: var(--neon-bills); }
+    .education-bg { background-color: var(--neon-education); }
+    .savings-bg { background-color: var(--neon-savings); }
+    .fun-bg { background-color: var(--neon-fun); }
+    
+    .transaction-form {
+      background-color: rgba(30, 30, 30, 0.7);
+      border-radius: 10px;
+      padding: 25px;
+      border: 1px solid #333;
+      margin-bottom: 30px;
+    }
+    
+    .form-control, .form-select {
+      background-color: #111;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 5px;
+    }
+    
+    .form-control:focus, .form-select:focus {
+      background-color: #222;
+      color: #fff;
+      border-color: #666;
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+    
+    .btn-neon {
+      position: relative;
+      background-color: transparent;
+      color: #fff;
+      border: 1px solid #fff;
+      border-radius: 5px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      z-index: 1;
+    }
+    
+    .btn-neon::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: all 0.5s ease;
+      z-index: -1;
+    }
+    
+    .btn-neon:hover::before {
+      left: 100%;
+    }
+    
+    .btn-tithe { border-color: var(--neon-tithe); color: var(--neon-tithe); }
+    .btn-debt-free { border-color: var(--neon-debt-free); color: var(--neon-debt-free); }
+    .btn-bills { border-color: var(--neon-bills); color: var(--neon-bills); }
+    .btn-education { border-color: var(--neon-education); color: var(--neon-education); }
+    .btn-savings { border-color: var(--neon-savings); color: var(--neon-savings); }
+    .btn-fun { border-color: var(--neon-fun); color: var(--neon-fun); }
+    
+    .modal-content {
+      background-color: rgba(20, 20, 20, 0.95);
+      border: 1px solid #444;
+    }
+    
+    .modal-header, .modal-footer {
+      border-color: #333;
+    }
+    
+    .summary-card {
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 30px;
+      background-color: rgba(30, 30, 30, 0.7);
+      border: 1px solid #333;
+    }
+    
+    .transaction-history {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .transaction-item {
+      background-color: rgba(40, 40, 40, 0.5);
+      border-left: 4px solid #555;
+      padding: 10px 15px;
+      border-radius: 0 5px 5px 0;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    
+    .transaction-item.deposit { border-left-color: #00ff00; }
+    .transaction-item.withdrawal { border-left-color: #ff0000; }
+    
+    .transaction-item.tithe { border-left-color: var(--neon-tithe); }
+    .transaction-item.debt-free { border-left-color: var(--neon-debt-free); }
+    .transaction-item.bills { border-left-color: var(--neon-bills); }
+    .transaction-item.education { border-left-color: var(--neon-education); }
+    .transaction-item.savings { border-left-color: var(--neon-savings); }
+    .transaction-item.fun { border-left-color: var(--neon-fun); }
+    
+    /* Futuristic spinner animation */
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid transparent;
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      position: relative;
+    }
+    
+    .loading-spinner:before, .loading-spinner:after {
+      content: '';
+      position: absolute;
+      border: 3px solid transparent;
+      border-radius: 50%;
+    }
+    
+    .loading-spinner:before {
+      top: -3px;
+      left: -3px;
+      right: -3px;
+      bottom: -3px;
+      border-top-color: #00ffff;
+      animation: spin 2s linear infinite;
+    }
+    
+    .loading-spinner:after {
+      top: 3px;
+      left: 3px;
+      right: 3px;
+      bottom: 3px;
+      border-top-color: #ff00ff;
+      animation: spin 3s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    
+    .flicker-animation {
+      animation: flicker 2s infinite alternate;
+    }
+    
+    @keyframes flicker {
+      0%, 18%, 22%, 25%, 53%, 57%, 100% {
+        text-shadow: 0 0 4px #fff, 0 0 11px #fff, 0 0 19px #fff, 0 0 40px currentColor;
+      }
+      20%, 24%, 55% {
+        text-shadow: none;
+      }
+    }
+    
+    /* Ripple effect */
+    .ripple {
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .ripple:after {
+      content: "";
+      display: block;
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      pointer-events: none;
+      background-image: radial-gradient(circle, #fff 10%, transparent 10.01%);
+      background-repeat: no-repeat;
+      background-position: 50%;
+      transform: scale(10, 10);
+      opacity: 0;
+      transition: transform .5s, opacity 1s;
+    }
+    
+    .ripple:active:after {
+      transform: scale(0, 0);
+      opacity: .3;
+      transition: 0s;
+    }
+    
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    ::-webkit-scrollbar-track {
+      background: #111;
+    }
+    
+    ::-webkit-scrollbar-thumb {
+      background: #444;
+      border-radius: 4px;
+    }
+    
+    ::-webkit-scrollbar-thumb:hover {
+      background: #555;
+    }
+  </style>
+</head>
+<body>
+  <header class="header mb-4">
+    <div class="container">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <h1 class="mb-0">King<span class="glow-text tithe-color">Can</span></h1>
+          <p class="mb-0 text-muted">Budget System</p>
+        </div>
+        <div class="col-md-6 text-end">
+          <h4 class="glow-text">Total Balance: <span id="total-balance">Kshs. 0.00</span></h4>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- Input Form -->
+    <div class="transaction-form">
+      <h3 class="mb-4">Add Transaction</h3>
+      <div class="row">
+        <div class="col-md-6 mb-3">
+          <label for="transaction-type" class="form-label">Transaction Type</label>
+          <select id="transaction-type" class="form-select">
+            <option value="deposit">Deposit (Income)</option>
+            <option value="withdraw">Withdraw (Spending)</option>
+          </select>
+        </div>
+        <div class="col-md-6 mb-3">
+          <label for="transaction-amount" class="form-label">Amount (Kshs. )</label>
+          <input type="number" id="transaction-amount" class="form-control" min="0.01" step="0.01" placeholder="0.00">
+        </div>
+      </div>
+      
+      <div id="withdraw-options" class="row mb-3 d-none">
+        <div class="col-md-6">
+          <label for="withdrawal-category" class="form-label">Category</label>
+          <select id="withdrawal-category" class="form-select">
+            <option value="tithe">Tithe</option>
+            <option value="debt-free">Debt Free</option>
+            <option value="bills">Bills</option>
+            <option value="education">Education</option>
+            <option value="savings">Savings</option>
+            <option value="fun">Fun</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label for="transaction-note" class="form-label">Note (Optional)</label>
+          <input type="text" id="transaction-note" class="form-control" placeholder="Shopping, Bills, etc.">
+        </div>
+      </div>
+      
+      <div id="deposit-distribution" class="mb-3">
+        <p class="text-muted mb-2">Your deposit will be automatically distributed according to your plan:</p>
+        <div class="row">
+          <div class="col-md-4 mb-2">
+            <small class="d-block tithe-color">Tithe (10%): <span id="tithe-preview">Kshs. 0.00</span></small>
+            <small class="d-block debt-free-color">Debt Free (10%): <span id="debt-free-preview">Kshs. 0.00</span></small>
+          </div>
+          <div class="col-md-4 mb-2">
+            <small class="d-block bills-color">Bills (50%): <span id="bills-preview">Kshs. 0.00</span></small>
+            <small class="d-block education-color">Education (10%): <span id="education-preview">Kshs. 0.00</span></small>
+          </div>
+          <div class="col-md-4 mb-2">
+            <small class="d-block savings-color">Savings (10%): <span id="savings-preview">Kshs. 0.00</span></small>
+            <small class="d-block fun-color">Fun (10%): <span id="fun-preview">Kshs. 0.00</span></small>
+          </div>
+        </div>
+      </div>
+      
+      <button id="submit-transaction" class="btn btn-neon ripple">Process Transaction</button>
+    </div>
+    
+    <!-- Cans Grid -->
+    <h3 class="mb-4">Your Money Cans</h3>
+    <div class="row">
+      <!-- Tithe Can -->
+      <div class="col-md-4 mb-4">
+        <div class="can-container tithe-color">
+          <div class="can-header">
+            <h4 class="mb-0">Tithe</h4>
+            <span class="badge bg-dark">10%</span>
+          </div>
+          <div class="can-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Balance:</h5>
+              <h5 class="mb-0" id="tithe-balance">Kshs. 0.00</h5>
+            </div>
+            <div class="meter-container">
+              <div class="meter-fill tithe-bg" id="tithe-meter" style="width: 0%"></div>
+            </div>
+            <div class="text-end">
+              <button class="btn btn-neon btn-tithe btn-sm ripple" data-bs-toggle="modal" data-bs-target="#withdrawModal" data-can="tithe">Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Debt Free Can -->
+      <div class="col-md-4 mb-4">
+        <div class="can-container debt-free-color">
+          <div class="can-header">
+            <h4 class="mb-0">Debt Free</h4>
+            <span class="badge bg-dark">10%</span>
+          </div>
+          <div class="can-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Balance:</h5>
+              <h5 class="mb-0" id="debt-free-balance">Kshs. 0.00</h5>
+            </div>
+            <div class="meter-container">
+              <div class="meter-fill debt-free-bg" id="debt-free-meter" style="width: 0%"></div>
+            </div>
+            <div class="text-end">
+              <button class="btn btn-neon btn-debt-free btn-sm ripple" data-bs-toggle="modal" data-bs-target="#withdrawModal" data-can="debt-free">Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bills Can -->
+      <div class="col-md-4 mb-4">
+        <div class="can-container bills-color">
+          <div class="can-header">
+            <h4 class="mb-0">Bills</h4>
+            <span class="badge bg-dark">50%</span>
+          </div>
+          <div class="can-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Balance:</h5>
+              <h5 class="mb-0" id="bills-balance">Kshs. 0.00</h5>
+            </div>
+            <div class="meter-container">
+              <div class="meter-fill bills-bg" id="bills-meter" style="width: 0%"></div>
+            </div>
+            <div class="text-end">
+              <button class="btn btn-neon btn-bills btn-sm ripple" data-bs-toggle="modal" data-bs-target="#withdrawModal" data-can="bills">Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Education Can -->
+      <div class="col-md-4 mb-4">
+        <div class="can-container education-color">
+          <div class="can-header">
+            <h4 class="mb-0">Education</h4>
+            <span class="badge bg-dark">10%</span>
+          </div>
+          <div class="can-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Balance:</h5>
+              <h5 class="mb-0" id="education-balance">Kshs. 0.00</h5>
+            </div>
+            <div class="meter-container">
+              <div class="meter-fill education-bg" id="education-meter" style="width: 0%"></div>
+            </div>
+            <div class="text-end">
+              <button class="btn btn-neon btn-education btn-sm ripple" data-bs-toggle="modal" data-bs-target="#withdrawModal" data-can="education">Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Savings Can -->
+      <div class="col-md-4 mb-4">
+        <div class="can-container savings-color">
+          <div class="can-header">
+            <h4 class="mb-0">Savings</h4>
+            <span class="badge bg-dark">10%</span>
+          </div>
+          <div class="can-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Balance:</h5>
+              <h5 class="mb-0" id="savings-balance">Kshs. 0.00</h5>
+            </div>
+            <div class="meter-container">
+              <div class="meter-fill savings-bg" id="savings-meter" style="width: 0%"></div>
+            </div>
+            <div class="text-end">
+              <button class="btn btn-neon btn-savings btn-sm ripple" data-bs-toggle="modal" data-bs-target="#withdrawModal" data-can="savings">Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Fun Can -->
+      <div class="col-md-4 mb-4">
+        <div class="can-container fun-color">
+          <div class="can-header">
+            <h4 class="mb-0">Fun</h4>
+            <span class="badge bg-dark">10%</span>
+          </div>
+          <div class="can-body">
+            <div class="d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">Balance:</h5>
+              <h5 class="mb-0" id="fun-balance">Kshs. 0.00</h5>
+            </div>
+            <div class="meter-container">
+              <div class="meter-fill fun-bg" id="fun-meter" style="width: 0%"></div>
+            </div>
+            <div class="text-end">
+              <button class="btn btn-neon btn-fun btn-sm ripple" data-bs-toggle="modal" data-bs-target="#withdrawModal" data-can="fun">Withdraw</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Transaction History -->
+    <div class="summary-card p-4">
+      <h3 class="mb-4">Recent Transactions</h3>
+      <div class="transaction-history" id="transaction-history">
+        <div class="text-center text-muted py-4">
+          <p>No transactions yet</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Withdraw Modal -->
+  <div class="modal fade" id="withdrawModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Withdraw from <span id="withdraw-can-name">Can</span></h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="withdraw-amount" class="form-label">Amount to withdraw (Kshs. )</label>
+            <input type="number" class="form-control" id="withdraw-amount" min="0.01" step="0.01" placeholder="0.00">
+          </div>
+          <div class="mb-3">
+            <label for="withdraw-note" class="form-label">Note (Optional)</label>
+            <input type="text" class="form-control" id="withdraw-note" placeholder="What's this for?">
+          </div>
+          <div class="alert alert-danger d-none" id="withdraw-error">
+            Insufficient funds in this can.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-neon" id="confirm-withdraw">Withdraw</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Loading Overlay -->
+  <div id="loading-overlay" class="position-fixed top-0 start-0 w-100 h-100 d-none justify-content-center align-items-center" style="background-color: rgba(0,0,0,0.8); z-index: 9999;">
+    <div class="text-center">
+      <div class="loading-spinner mx-auto mb-3"></div>
+      <h4 class="glow-text" id="loading-text">Processing...</h4>
+    </div>
+  </div>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Budget distribution percentages
+      const budgetAllocation = {
+        tithe: 0.10,
+        'debt-free': 0.10,
+        bills: 0.50,
+        education: 0.10,
+        savings: 0.10,
+        fun: 0.10
+      };
+      
+      // Initialize app data
+      let appData = {
+        totalBalance: 0,
+        cans: {
+          tithe: { balance: 0, goal: 1000 },
+          'debt-free': { balance: 0, goal: 1000 },
+          bills: { balance: 0, goal: 5000 },
+          education: { balance: 0, goal: 1000 },
+          savings: { balance: 0, goal: 1000 },
+          fun: { balance: 0, goal: 1000 }
+        },
+        transactions: []
+      };
+      
+      // DOM Elements
+      const totalBalanceEl = document.getElementById('total-balance');
+      const transactionTypeEl = document.getElementById('transaction-type');
+      const transactionAmountEl = document.getElementById('transaction-amount');
+      const transactionNoteEl = document.getElementById('transaction-note');
+      const withdrawOptionsEl = document.getElementById('withdraw-options');
+      const depositDistributionEl = document.getElementById('deposit-distribution');
+      const withdrawalCategoryEl = document.getElementById('withdrawal-category');
+      const submitTransactionBtn = document.getElementById('submit-transaction');
+      const transactionHistoryEl = document.getElementById('transaction-history');
+      
+      const withdrawModal = document.getElementById('withdrawModal');
+      const withdrawCanNameEl = document.getElementById('withdraw-can-name');
+      const withdrawAmountEl = document.getElementById('withdraw-amount');
+      const withdrawNoteEl = document.getElementById('withdraw-note');
+      const withdrawErrorEl = document.getElementById('withdraw-error');
+      const confirmWithdrawBtn = document.getElementById('confirm-withdraw');
+      
+      const loadingOverlay = document.getElementById('loading-overlay');
+      const loadingText = document.getElementById('loading-text');
+      
+      let currentWithdrawCan = '';
+      
+      // Check for saved data in localStorage
+      function loadSavedData() {
+        const savedData = localStorage.getItem('neonBudgetData');
+        if (savedData) {
+          try {
+            appData = JSON.parse(savedData);
+            updateUI();
+          } catch (e) {
+            console.error('Error loading saved data:', e);
+          }
+        }
+      }
+      
+      // Save data to localStorage
+      function saveData() {
+        localStorage.setItem('neonBudgetData', JSON.stringify(appData));
+      }
+      
+      // Format currency
+      function formatCurrency(amount) {
+        return 'Kshs. ' + amount.toFixed(2);
+      }
+      
+      // Update all UI elements
+      function updateUI() {
+        // Update total balance
+        totalBalanceEl.textContent = formatCurrency(appData.totalBalance);
+        
+        // Update can balances and meters
+        for (const can in appData.cans) {
+          const canData = appData.cans[can];
+          const balanceEl = document.getElementById(`${can}-balance`);
+          const meterEl = document.getElementById(`${can}-meter`);
+          
+          if (balanceEl) balanceEl.textContent = formatCurrency(canData.balance);
+          
+          if (meterEl) {
+            const fillPercentage = Math.min((canData.balance / canData.goal) * 100, 100);
+            meterEl.style.width = `${fillPercentage}%`;
+            
+            // Apply different effects based on fill level
+            if (fillPercentage >= 100) {
+              meterEl.style.boxShadow = `0 0 10px var(--neon-${can})`;
+              document.querySelector(`.can-container.${can}-color`).classList.add('flicker-animation');
+            } else if (fillPercentage >= 50) {
+              meterEl.style.boxShadow = `0 0 5px var(--neon-${can})`;
+              document.querySelector(`.can-container.${can}-color`).classList.remove('flicker-animation');
+            } else {
+              meterEl.style.boxShadow = 'none';
+              document.querySelector(`.can-container.${can}-color`).classList.remove('flicker-animation');
+            }
+          }
+        }
+        
+        // Update transaction history
+        renderTransactionHistory();
+      }
+      
+      // Render transaction history
+      function renderTransactionHistory() {
+        if (appData.transactions.length === 0) {
+          transactionHistoryEl.innerHTML = `
+            <div class="text-center text-muted py-4">
+              <p>No transactions yet</p>
+            </div>
+          `;
+          return;
+        }
+        
+        let historyHTML = '';
+        // Get the last 10 transactions, most recent first
+        const recentTransactions = [...appData.transactions].reverse().slice(0, 10);
+        
+        recentTransactions.forEach(transaction => {
+          const date = new Date(transaction.timestamp).toLocaleDateString();
+          const time = new Date(transaction.timestamp).toLocaleTimeString();
+          
+          let transactionClass = transaction.type === 'deposit' ? 'deposit' : 'withdrawal';
+          if (transaction.category) {
+            transactionClass = transaction.category;
+          }
+          
+          historyHTML += `
+            <div class="transaction-item ${transactionClass}">
+              <div>
+                <strong>${transaction.type === 'deposit' ? 'Deposit' : 'Withdrawal'}</strong>
+                ${transaction.category ? ` - ${transaction.category.charAt(0).toUpperCase() + transaction.category.slice(1).replace('-', ' ')}` : ''}
+                ${transaction.note ? `<small class="d-block text-muted">${transaction.note}</small>` : ''}
+              </div>
+              <div class="text-end">
+                <span class="${transaction.type === 'deposit' ? 'text-success' : 'text-danger'}">${transaction.type === 'deposit' ? '+' : '-'}${formatCurrency(transaction.amount)}</span>
+                <small class="d-block text-muted">${date} at ${time}</small>
+              </div>
+            </div>
+          `;
+        });
+        
+        transactionHistoryEl.innerHTML = historyHTML;
+      }
+      
+      // Calculate deposit distribution
+      function calculateDistribution(amount) {
+        const distribution = {};
+        
+        for (const category in budgetAllocation) {
+          distribution[category] = amount * budgetAllocation[category];
+        }
+        
+        return distribution;
+      }
+      
+      // Update deposit preview
+      function updateDepositPreview() {
+        const amount = parseFloat(transactionAmountEl.value) || 0;
+        const distribution = calculateDistribution(amount);
+        
+        for (const category in distribution) {
+          const previewEl = document.getElementById(`${category}-preview`);
+          if (previewEl) {
+            previewEl.textContent = formatCurrency(distribution[category]);
+          }
+        }
+      }
+      
+      // Show loading animation
+      function showLoading(message = 'Processing...') {
+        loadingText.textContent = message;
+        loadingOverlay.classList.remove('d-none');
+        loadingOverlay.classList.add('d-flex');
+      }
+      
+      // Hide loading animation
+      function hideLoading() {
+        loadingOverlay.classList.add('d-none');
+        loadingOverlay.classList.remove('d-flex');
+      }
+      
+      // Process deposit
+      function processDeposit(amount, note) {
+        showLoading('Processing deposit...');
+        
+        // Simulate processing delay
+        setTimeout(() => {
+          const distribution = calculateDistribution(amount);
+          
+          // Update can balances
+          for (const category in distribution) {
+            appData.cans[category].balance += distribution[category];
+          }
+          
+          // Update total balance
+          appData.totalBalance += amount;
+          
+          // Add transaction to history
+          appData.transactions.push({
+            type: 'deposit',
+            amount: amount,
+            distribution: distribution,
+            note: note,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Save data
+          saveData();
+          
+          // Update UI
+          updateUI();
+          
+          // Clear form
+          transactionAmountEl.value = '';
+          transactionNoteEl.value = '';
+          
+          hideLoading();
+        }, 1500);
+      }
+      
+      // Process withdrawal
+      function processWithdrawal(category, amount, note) {
+        showLoading('Processing withdrawal...');
+        
+        // Simulate processing delay
+        setTimeout(() => {
+          // Ensure there are enough funds
+          if (appData.cans[category].balance < amount) {
+            withdrawErrorEl.classList.remove('d-none');
+            hideLoading();
+            return;
+          }
+          
+          // Update can balance
+          appData.cans[category].balance -= amount;
+          
+          // Update total balance
+          appData.totalBalance -= amount;
+          
+          // Add transaction to history
+          appData.transactions.push({
+            type: 'withdraw',
+            category: category,
+            amount: amount,
+            note: note,
+            timestamp: new Date().toISOString()
+          });
+          
+          // Save data
+          saveData();
+          
+          // Update UI
+          updateUI();
+          
+          // Close modal
+          const modal = bootstrap.Modal.getInstance(withdrawModal);
+          modal.hide();
+          
+          // Clear form
+          withdrawAmountEl.value = '';
+          withdrawNoteEl.value = '';
+          withdrawErrorEl.classList.add('d-none');
+          
+          hideLoading();
+        }, 1500);
+      }
+      
+      // Event Listeners
+      
+      // Toggle between deposit and withdraw options
+      transactionTypeEl.addEventListener('change', function() {
+        if (this.value === 'deposit') {
+          withdrawOptionsEl.classList.add('d-none');
+          depositDistributionEl.classList.remove('d-none');
+          submitTransactionBtn.textContent = 'Process Deposit';
+          submitTransactionBtn.className = 'btn btn-neon ripple';
+        } else {
+          withdrawOptionsEl.classList.remove('d-none');
+          depositDistributionEl.classList.add('d-none');
+          submitTransactionBtn.textContent = 'Process Withdrawal';
+          submitTransactionBtn.className = 'btn btn-neon ripple';
+        }
+      });
+      
+      // Update deposit preview when amount changes
+      transactionAmountEl.addEventListener('input', updateDepositPreview);
+      
+      // Handle withdraw button click in can container
+      document.querySelectorAll('[data-bs-toggle="modal"][data-can]').forEach(button => {
+        button.addEventListener('click', function() {
+          currentWithdrawCan = this.getAttribute('data-can');
+          withdrawCanNameEl.textContent = currentWithdrawCan.charAt(0).toUpperCase() + 
+                                          currentWithdrawCan.slice(1).replace('-', ' ');
+          
+          // Update modal button color
+          confirmWithdrawBtn.className = `btn btn-neon btn-${currentWithdrawCan}`;
+          
+          // Reset error message
+          withdrawErrorEl.classList.add('d-none');
+        });
+      });
+      
+      // Handle transaction submission
+      submitTransactionBtn.addEventListener('click', function() {
+        const type = transactionTypeEl.value;
+        const amount = parseFloat(transactionAmountEl.value);
+        const note = transactionNoteEl.value.trim();
+        
+        if (isNaN(amount) || amount <= 0) {
+          alert('Please enter a valid amount.');
+          return;
+        }
+        
+        if (type === 'deposit') {
+          processDeposit(amount, note);
+        } else {
+          const category = withdrawalCategoryEl.value;
+          
+          // Ensure there are enough funds
+          if (appData.cans[category].balance < amount) {
+            alert(`Insufficient funds in ${category} can.`);
+            return;
+          }
+          
+          processWithdrawal(category, amount, note);
+        }
+      });
+      
+      // Handle withdrawal from modal
+      confirmWithdrawBtn.addEventListener('click', function() {
+        const amount = parseFloat(withdrawAmountEl.value);
+        const note = withdrawNoteEl.value.trim();
+        
+        if (isNaN(amount) || amount <= 0) {
+          alert('Please enter a valid amount.');
+          return;
+        }
+        
+        // Ensure there are enough funds
+        if (appData.cans[currentWithdrawCan].balance < amount) {
+          withdrawErrorEl.classList.remove('d-none');
+          return;
+        }
+        
+        processWithdrawal(currentWithdrawCan, amount, note);
+      });
+      
+      // Hide error message when amount changes
+      withdrawAmountEl.addEventListener('input', function() {
+        withdrawErrorEl.classList.add('d-none');
+      });
+      
+      // Initialize the application
+      loadSavedData();
+      
+      // Set some goals based on average deposits (if any deposits exist)
+      function updateGoals() {
+        const deposits = appData.transactions.filter(t => t.type === 'deposit');
+        if (deposits.length > 0) {
+          // Calculate average deposit
+          const totalDeposited = deposits.reduce((sum, t) => sum + t.amount, 0);
+          const avgDeposit = totalDeposited / deposits.length;
+          
+          // Set goals to 3x the average monthly deposit for each category
+          for (const category in appData.cans) {
+            appData.cans[category].goal = avgDeposit * 3 * budgetAllocation[category];
+          }
+          
+          // Update UI
+          updateUI();
+          saveData();
+        }
+      }
+      
+      // Update goals on first load
+      if (appData.transactions.length > 0 && !appData.goalsUpdated) {
+        updateGoals();
+        appData.goalsUpdated = true;
+        saveData();
+      }
+      
+      // Reset all data (for development)
+      window.resetData = function() {
+        if (confirm('Are you sure you want to reset all data? This cannot be undone.')) {
+          localStorage.removeItem('neonBudgetData');
+          location.reload();
+        }
+      };
+      
+      // Make a demo deposit (for development)
+      window.demoDeposit = function(amount = 1000) {
+        processDeposit(amount, 'Demo Deposit');
+      };
+    });
+  </script>
+</body>
+</html>
